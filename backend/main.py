@@ -2,8 +2,10 @@ import os
 import json
 import logging
 from dotenv import load_dotenv
+import io
 
 import openai
+import pdfplumber
 from fastapi import FastAPI, File, UploadFile, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -88,72 +90,69 @@ Now, generate the JSON response.
 """
 
 
+# --- Helper function to extract text from a PDF ---
+def extract_text_from_pdf(file_bytes: bytes) -> str:
+    """
+    Extracts text from the bytes of a PDF file.
+    """
+    text = ""
+    # Use io.BytesIO to treat the byte string as a file
+    with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+        for page in pdf.pages:
+            # Extract text from each page and add it to the string.
+            # Use `or ""` to handle pages with no text.
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+    return text
+
 # --- API Endpoint ---
 
 @app.post("/reconcile")
 async def reconcile_documents(
-    invoice_file: UploadFile = File(..., description="The hospital's submitted invoice (PDF, TXT, etc.)"),
-    payout_summary_file: UploadFile = File(..., description="The insurer's payout summary document.")
+    invoice_file: UploadFile = File(..., description="The hospital's submitted invoice (PDF)"),
+    payout_summary_file: UploadFile = File(..., description="The insurer's payout summary (PDF)")
 ):
-    """
-    Accepts an invoice and a payout summary, compares them using an LLM,
-    and returns a structured JSON reconciliation report.
-    """
     if not client:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="OpenAI client is not configured. Check API key."
         )
 
-    logger.info("Received reconciliation request.")
+    logger.info("Received reconciliation request. Reading files.")
 
     try:
-        # 1. Read the content of the uploaded files
-        invoice_content = await invoice_file.read()
-        payout_content = await payout_summary_file.read()
+        # 1. Read the raw bytes of the uploaded files
+        invoice_content_bytes = await invoice_file.read()
+        payout_content_bytes = await payout_summary_file.read()
 
-        # For this MVP, we assume the files are text-based. In a real app,
-        # you would use a library like PyPDF2 or pdfplumber to extract text from PDFs.
-        # For the hackathon, you can use mock .txt files.
-        invoice_text = invoice_content.decode('utf-8')
-        payout_text = payout_content.decode('utf-8')
-        logger.info("Successfully read and decoded both files.")
+        # 2. Extract text from the PDF bytes using our new helper function
+        #    This replaces the old `.decode('utf-8')` line
+        invoice_text = extract_text_from_pdf(invoice_content_bytes)
+        payout_text = extract_text_from_pdf(payout_content_bytes)
+        
+        logger.info("Successfully extracted text from both PDF files.")
 
     except Exception as e:
-        logger.error(f"Error reading uploaded files: {e}")
-        raise HTTPException(status_code=400, detail=f"Error processing files: {e}")
+        logger.error(f"Error processing files: {e}")
+        # Make the error message more user-friendly
+        raise HTTPException(status_code=400, detail=f"Error processing files: {e}. Please ensure you are uploading valid PDF documents.")
 
-    # 2. Format the prompt with the document text
     full_prompt = PROMPT_TEMPLATE.format(invoice_text=invoice_text, payout_text=payout_text)
 
     try:
         logger.info("Sending request to OpenAI API...")
-        # 3. Call the OpenAI API
         chat_completion = await client.chat.completions.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": full_prompt,
-                }
-            ],
-            model="gpt-4-turbo-preview",  # GPT-4 is better for complex structured data tasks
-            # model="gpt-3.5-turbo-0125", # A cheaper, faster alternative if needed
-            response_format={"type": "json_object"}, # This is the magic!
-            temperature=0.1, # Low temperature for more deterministic, factual output
+            messages=[{"role": "user", "content": full_prompt}],
+            model="gpt-4-turbo-preview",
+            response_format={"type": "json_object"},
+            temperature=0.1,
         )
-
         response_content = chat_completion.choices[0].message.content
         logger.info("Received successful response from OpenAI API.")
 
-        # 4. Parse the JSON response from the LLM
         parsed_data = json.loads(response_content)
-
-        # 5. Return the data in the agreed-upon API contract format
-        # The structure from the LLM already matches our contract, so we just wrap it.
-        return {
-            "status": "success",
-            "data": parsed_data
-        }
+        return {"status": "success", "data": parsed_data}
 
     except openai.APIError as e:
         logger.error(f"OpenAI API Error: {e}")
@@ -164,7 +163,6 @@ async def reconcile_documents(
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An unexpected server error occurred: {e}")
-
 @app.get("/", include_in_schema=False)
 async def root():
     return {"message": "InvoiceMatch.AI Backend is running!"}
