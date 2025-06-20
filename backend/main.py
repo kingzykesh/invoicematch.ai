@@ -61,19 +61,19 @@ You are an expert AI assistant for hospital financial reconciliation. Your task 
 6.  You MUST return your findings in a single, valid JSON object. Do not include any text, explanations, or markdown formatting like ```json before or after the JSON object.
 
 The JSON object must follow this exact structure:
-{
+{{
   "executiveSummary": "A natural language summary here...",
-  "reconciliation": {
+  "reconciliation": {{
     "totalBilled": 50000,
     "totalPaid": 42500,
     "discrepancyAmount": 7500,
     "lineItems": [
-      {"description": "Item Name", "billed": 15000, "paid": 15000, "status": "Paid in Full"},
-      {"description": "Another Item", "billed": 5000, "paid": 4250, "status": "Underpaid"},
-      {"description": "A Third Item", "billed": 7500, "paid": 0, "status": "Denied"}
+      {{"description": "Consultation Fee", "billed": 15000, "paid": 15000, "status": "Paid in Full"}},
+      {{"description": "IV Fluids", "billed": 5000, "paid": 4250, "status": "Underpaid"}},
+      {{"description": "Lab Test XYZ", "billed": 7500, "paid": 0, "status": "Denied"}}
     ]
-  }
-}
+  }}
+}}
 
 Here are the documents:
 
