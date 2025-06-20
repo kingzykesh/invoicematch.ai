@@ -111,7 +111,7 @@ async def log_claim_to_curacel(reconciliation_data: Dict[str, Any], summary: str
             return "Discrepancy noted, but no specific line items were flagged for claim creation."
             
         payload = {
-            "provider_id": 234112,
+            "provider_code": "234112",
             "amount_claimed": discrepancy_amount,
             "claim_type": "PRIMARY",
             "encounter_date": datetime.now().strftime("%Y-%m-%d"),
