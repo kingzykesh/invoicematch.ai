@@ -5,7 +5,7 @@ import ResultDisplay from '../components/ResultDisplay';
 import Toast from '../components/Toast';
 import Image from 'next/image';
 
-const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/reconcile`;
+const API_URL = `https://invoicematch-ai-4f7em.ondigitalocean.app/reconcile`;
 
 export default function Home() {
   const [hospitalFile, setHospitalFile] = useState(null);
