@@ -1,0 +1,61 @@
+{
+  "status": "success",
+  "data": {
+    "executiveSummary": "Upon reviewing the hospital's invoice and the insurer's payout summary for patient Bisi Adewale, it was found that the total amount billed by Island Lagoon Medical Centre was NGN 137,500.00. The insurer, Prime Health HMO, has paid a total of NGN 99,800.00. The discrepancy between the billed amount and the paid amount totals NGN 37,700.00. The discrepancies arose from partial payments for IV Fluids and Private Room Charges, and denials for the Chest X-Ray and Take-Home Medication. All other services were approved and paid in full by the insurer.",
+    "reconciliation": {
+      "totalBilled": 137500,
+      "totalPaid": 99800,
+      "discrepancyAmount": 37700,
+      "lineItems": [
+        {
+          "description": "General Consultation with Doctor",
+          "billed": 15000,
+          "paid": 15000,
+          "status": "Paid in Full"
+        },
+        {
+          "description": "Full Blood Count Test",
+          "billed": 10500,
+          "paid": 10500,
+          "status": "Paid in Full"
+        },
+        {
+          "description": "Malaria Parasite Test (Rapid)",
+          "billed": 5000,
+          "paid": 5000,
+          "status": "Paid in Full"
+        },
+        {
+          "description": "IV Fluids (Normal Saline) - 2 bags",
+          "billed": 8000,
+          "paid": 6800,
+          "status": "Underpaid"
+        },
+        {
+          "description": "Anti-Malarial Drugs (Artesunate)",
+          "billed": 12500,
+          "paid": 12500,
+          "status": "Paid in Full"
+        },
+        {
+          "description": "Chest X-Ray (PA View)",
+          "billed": 25000,
+          "paid": 0,
+          "status": "Denied"
+        },
+        {
+          "description": "Private Room Charges - 2 Nights",
+          "billed": 60000,
+          "paid": 50000,
+          "status": "Underpaid"
+        },
+        {
+          "description": "Take-Home Medication (Paracetamol)",
+          "billed": 1500,
+          "paid": 0,
+          "status": "Denied"
+        }
+      ]
+    }
+  }
+}
